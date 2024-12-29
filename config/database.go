@@ -12,8 +12,16 @@ type Postgres struct {
 	DB *gorm.DB
 }
 
+// ConnectionPostgres establishes a connection to a PostgreSQL database using the provided configuration.
+//
+// This function uses the Config struct to create a connection string, opens a connection to the database,
+// and sets up connection pool parameters.
+//
+// Returns:
+//   - *Postgres: A pointer to a Postgres struct containing the established database connection.
+//   - error: An error if the connection fails, or nil if successful.
 func (cfg Config) ConnectionPostgres() (*Postgres, error) {
-	dbConnString := fmt.Sprint("postgres://%s:%d@%s:%s/%s",
+	dbConnString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
 		cfg.Psql.User,
 		cfg.Psql.Password,
 		cfg.Psql.Host,
