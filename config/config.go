@@ -25,6 +25,14 @@ type Config struct {
 	Psql PsqlDB
 }
 
+// NewConfig creates and returns a new Config instance.
+// It initializes the configuration by reading values from environment variables
+// using the viper package. The function populates both the App and PsqlDB
+// structs within the Config.
+//
+// Returns:
+//   - *Config: A pointer to a new Config instance with all fields populated
+//     from the corresponding environment variables.
 func NewConfig() *Config {
 	return &Config{
 		App: App{
