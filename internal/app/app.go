@@ -2,9 +2,10 @@ package app
 
 import (
 	"portal-blog/config"
+	"portal-blog/lib/auth"
 
-	"github.com/rs/zerolog/log"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/rs/zerolog/log"
 )
 
 // RunServer initializes and starts the server application.
@@ -23,5 +24,7 @@ func RunServer() {
 	// Cloudflare R2
 	cdfR2 := cfg.LoadAwsConfig()
 	_ = s3.NewFromConfig(cdfR2)
+
+	_ = auth.NewJwt(cfg)
 
 }
