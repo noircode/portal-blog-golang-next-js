@@ -5,6 +5,9 @@ import (
 	"os"
 	"os/signal"
 	"portal-blog/config"
+	"portal-blog/internal/adapter/handler"
+	"portal-blog/internal/adapter/repository"
+	"portal-blog/internal/core/service"
 	"portal-blog/lib/auth"
 	"portal-blog/lib/middleware"
 	"portal-blog/lib/pagination"
@@ -25,7 +28,7 @@ import (
 func RunServer() {
 	cfg := config.NewConfig()
 
-	_, err := cfg.ConnectionPostgres()
+	db, err := cfg.ConnectionPostgres()
 
 	if err != nil {
 		log.Fatal().Msgf("Error connecting to database: %v", err)
@@ -36,10 +39,20 @@ func RunServer() {
 	cdfR2 := cfg.LoadAwsConfig()
 	_ = s3.NewFromConfig(cdfR2)
 
-	_ = auth.NewJwt(cfg)
+	jwt := auth.NewJwt(cfg)
 	_ = middleware.NewMiddleware(cfg)
 
 	_ = pagination.NewPagination()
+
+	// Repository
+	authRepo := repository.NewAuthRepository(db.DB)
+
+
+	// Service
+	authService := service.NewAuthService(authRepo, cfg, jwt)
+
+	// Handler
+	authHandler := handler.NewAuthHandler(authService)
 
 	app := fiber.New()
 	app.Use(cors.New())
@@ -48,7 +61,8 @@ func RunServer() {
 		Format: "[${time}] %{ip} %{status} - %{latency} %{method} %{path}\n",
 	}))
 
-	_ = app.Group("/api")
+	api := app.Group("/api")
+	api.Post("/login", authHandler.Login)
 
 	go func() {
 		if cfg.App.AppPort == "" {
