@@ -7,7 +7,6 @@ import (
 	"portal-blog/internal/core/service"
 	valid "portal-blog/lib/validator"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -15,7 +14,6 @@ import (
 var err error
 var code string
 var errorResp response.ErrorResponseDefault
-var validate = validator.New()
 
 type AuthHandler interface {
 	Login(c *fiber.Ctx) error

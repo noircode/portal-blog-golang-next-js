@@ -14,7 +14,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var err error
 var code string
 
 type AuthService interface {
@@ -23,8 +22,8 @@ type AuthService interface {
 
 type authService struct {
 	authRepository repository.AuthRepository
-	cfg *config.Config
-	jtwToken auth.Jwt
+	cfg            *config.Config
+	jtwToken       auth.Jwt
 }
 
 // GetUserByEmail implements AuthService.
@@ -39,15 +38,15 @@ func (a *authService) GetUserByEmail(ctx context.Context, req entity.LoginReques
 	if checkPass := conv.CheckPasswordHash(req.Password, result.Password); !checkPass {
 		code = "[SERVICE] GetUserByEmail - 2"
 		err = errors.New("invalid password")
-    log.Errorw(code, err)
-    return nil, err
+		log.Errorw(code, err)
+		return nil, err
 	}
 
 	jwtData := entity.JwtData{
 		UserID: float64(result.ID),
 		RegisteredClaims: jwt.RegisteredClaims{
 			NotBefore: jwt.NewNumericDate(time.Now().Add(time.Hour * 2)),
-			ID: string(result.ID),
+			ID:        string(rune(result.ID)),
 		},
 	}
 
@@ -55,21 +54,22 @@ func (a *authService) GetUserByEmail(ctx context.Context, req entity.LoginReques
 
 	if err != nil {
 		code = "[SERVICE] GetUserByEmail - 3"
-    log.Errorw(code, err)
-    return nil, err
+		log.Errorw(code, err)
+		return nil, err
 	}
 
 	resp := entity.AccessToken{
 		AccessToken: accessToken,
-    ExpiredAt: expiresAt,
+		ExpiredAt:   expiresAt,
 	}
 
-
 	return &resp, nil
-	
+
 }
 
 func NewAuthService(authRepository repository.AuthRepository, cfg *config.Config, jwtToken auth.Jwt) AuthService {
-	return &authService{authRepository: authRepository}
+	return &authService{authRepository: authRepository,
+		cfg:      cfg,
+		jtwToken: jwtToken,
+	}
 }
-
