@@ -61,8 +61,11 @@ func RunServer() {
 		Format: "[${time}] %{ip} %{status} - %{latency} %{method} %{path}\n",
 	}))
 
+
+	// Group API
 	api := app.Group("/api")
 	api.Post("/login", authHandler.Login)
+	
 
 	go func() {
 		if cfg.App.AppPort == "" {

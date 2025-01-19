@@ -5,6 +5,7 @@ import (
 	"portal-blog/internal/adapter/handler/response"
 	"portal-blog/internal/core/domain/entity"
 	"portal-blog/internal/core/service"
+	valid "portal-blog/lib/validator"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -38,7 +39,7 @@ func (a *authHandler) Login(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errorResp)
 	}
 
-	if err = validate.Struct(req); err != nil {
+	if err = valid.ValidateStruct(req); err != nil {
 		code = "[HANDLER] Login - 2"
 		log.Errorw(code, err)
 		errorResp.Meta.Status = false
@@ -58,6 +59,10 @@ func (a *authHandler) Login(c *fiber.Ctx) error {
 		log.Errorw(code, err)
 		errorResp.Meta.Status = false
 		errorResp.Meta.Message = err.Error()
+
+		if err.Error() == "invalid password" {
+			return c.Status(fiber.StatusUnauthorized).JSON(errorResp)
+		}
 
 		return c.Status(fiber.StatusInternalServerError).JSON(errorResp)
 	}
