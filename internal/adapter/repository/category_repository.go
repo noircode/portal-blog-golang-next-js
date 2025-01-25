@@ -109,7 +109,27 @@ func (c *categoryRepository) GetCategories(ctx context.Context) ([]entity.Catego
 
 // GetCategoryById implements CategoryRepository.
 func (c *categoryRepository) GetCategoryById(ctx context.Context, id int64) (*entity.CategoryEntity, error) {
-	panic("unimplemented")
+	var categoryModel model.Category
+
+	err = c.db.Where("id = ?", id).Preload("User").First(&categoryModel).Error
+	if err != nil {
+		code = "[REPOSITORY] GetCategoryById - 1"
+    log.Errorw(code, err)
+    return nil, err
+	}
+
+	categoryEntity := &entity.CategoryEntity{
+		ID:    categoryModel.ID,
+    Title: categoryModel.Title,
+    Slug:  categoryModel.Slug,
+    User: entity.UserEntity{
+      ID:       categoryModel.User.ID,
+      Name:     categoryModel.User.Name,
+      Email:    categoryModel.User.Email,
+    },
+	}
+
+	return categoryEntity, nil
 }
 
 func NewCategoryRepository(db *gorm.DB) CategoryRepository {

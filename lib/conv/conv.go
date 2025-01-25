@@ -1,6 +1,7 @@
 package conv
 
 import (
+	"strconv"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -44,4 +45,9 @@ func GenerateSlug(title string) string {
     slug = strings.ReplaceAll(slug, " ", "-")
 
     return slug
+}
+
+
+func StringToInt64(str string) (int64, error) {
+    return strconv.ParseInt(str, 10, 64)
 }

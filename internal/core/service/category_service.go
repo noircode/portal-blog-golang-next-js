@@ -62,7 +62,14 @@ func (c *categoryService) GetCategories(ctx context.Context) ([]entity.CategoryE
 
 // GetCategoryById implements CategoryService.
 func (c *categoryService) GetCategoryById(ctx context.Context, id int64) (*entity.CategoryEntity, error) {
-	panic("unimplemented")
+	result, err := c.categoryRepository.GetCategoryById(ctx, id)
+	if err != nil {
+		code = "[SERVICE] GetCategoryById - 1"
+    log.Errorw(code, err)
+    return nil, err
+	}
+	
+	return result, nil
 }
 
 func NewCategoryService(categoryRepo repository.CategoryRepository) CategoryService {
