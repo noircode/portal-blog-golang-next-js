@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"portal-blog/internal/core/domain/entity"
 	"portal-blog/internal/core/domain/model"
 
@@ -24,7 +25,33 @@ type categoryRepository struct {
 
 // CreateCategory implements CategoryRepository.
 func (c *categoryRepository) CreateCategory(ctx context.Context, req entity.CategoryEntity) error {
-	panic("unimplemented")
+	var countSlug int64
+	err = c.db.Table("categories").Where("slug = ?", req.Slug).Count(&countSlug).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		code = "[REPOSITORY] CreateCategory - 1"
+		log.Errorw(code, err)
+		return err
+	}
+
+	countSlug += 1
+
+	slug := fmt.Sprintf("%s-%d", req.Slug, countSlug)
+
+	modelCategory := model.Category{
+		ID:          0,
+		Title:       req.Title,
+		Slug:        slug,
+		CreatedByID: req.User.ID,
+	}
+
+	err = c.db.Create(&modelCategory).Error
+	if err != nil {
+		code = "[REPOSITORY] CreateCategory - 2"
+		log.Errorw(code, err)
+		return err
+	}
+
+	return nil
 }
 
 // DeleteCategoryById implements CategoryRepository.
@@ -46,38 +73,38 @@ func (c *categoryRepository) EditCategoryById(ctx context.Context, req entity.Ca
 // - A slice of CategoryEntity representing the retrieved categories.
 // - An error if any occurred during the retrieval process.
 func (c *categoryRepository) GetCategories(ctx context.Context) ([]entity.CategoryEntity, error) {
-    var modelCategories []*model.Category
+	var modelCategories []*model.Category
 
-    err = c.db.Order("created_at desc").Preload("User").Find(&modelCategories).Error
-    if err != nil {
-        code = "[REPOSITORY] GetCategories - 1"
-        log.Errorw(code, err)
-        return nil, err
-    }
+	err = c.db.Order("created_at desc").Preload("User").Find(&modelCategories).Error
+	if err != nil {
+		code = "[REPOSITORY] GetCategories - 1"
+		log.Errorw(code, err)
+		return nil, err
+	}
 
-    if len(modelCategories) == 0 {
-        code = "[REPOSITORY] GetCategories - 2"
-        err = errors.New("data not found")
-        log.Errorw(code, err)
-        return nil, err
-    }
+	if len(modelCategories) == 0 {
+		code = "[REPOSITORY] GetCategories - 2"
+		err = errors.New("data not found")
+		log.Errorw(code, err)
+		return nil, err
+	}
 
-    var resps []entity.CategoryEntity
-    for _, v := range modelCategories {
-        resps = append(resps, entity.CategoryEntity{
-            ID:    v.ID,
-            Title: v.Title,
-            Slug:  v.Slug,
-            User: entity.UserEntity{
-                ID:       v.User.ID,
-                Name:     v.User.Name,
-                Email:    v.User.Email,
-                Password: v.User.Password,
-            },
-        })
-    }
+	var resps []entity.CategoryEntity
+	for _, v := range modelCategories {
+		resps = append(resps, entity.CategoryEntity{
+			ID:    v.ID,
+			Title: v.Title,
+			Slug:  v.Slug,
+			User: entity.UserEntity{
+				ID:       v.User.ID,
+				Name:     v.User.Name,
+				Email:    v.User.Email,
+				Password: v.User.Password,
+			},
+		})
+	}
 
-    return resps, nil
+	return resps, nil
 }
 
 // GetCategoryById implements CategoryRepository.

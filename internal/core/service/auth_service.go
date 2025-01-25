@@ -14,6 +14,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+var err error
 var code string
 
 type AuthService interface {

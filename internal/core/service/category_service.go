@@ -4,6 +4,7 @@ import (
 	"context"
 	"portal-blog/internal/adapter/repository"
 	"portal-blog/internal/core/domain/entity"
+	"portal-blog/lib/conv"
 
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -22,7 +23,19 @@ type categoryService struct {
 
 // CreateCategory implements CategoryService.
 func (c *categoryService) CreateCategory(ctx context.Context, req entity.CategoryEntity) error {
-	panic("unimplemented")
+	slug := conv.GenerateSlug(req.Title)
+	req.Slug = slug
+
+	err = c.categoryRepository.CreateCategory(ctx, req)
+
+	if err != nil {
+		code = "[SERVICE] CreateCategory - 1"
+    log.Errorw(code, err)
+    return err
+	}
+
+	return nil
+  
 }
 
 // DeleteCategoryById implements CategoryService.
@@ -40,8 +53,8 @@ func (c *categoryService) GetCategories(ctx context.Context) ([]entity.CategoryE
 	results, err := c.categoryRepository.GetCategories(ctx)
 	if err != nil {
 		code = "[SERVICE] GetCategories - 1"
-    log.Errorw(code, err)
-    return nil, err
+		log.Errorw(code, err)
+		return nil, err
 	}
 
 	return results, nil
