@@ -6,6 +6,7 @@ import (
 	"portal-blog/internal/adapter/handler/response"
 	"portal-blog/internal/core/domain/entity"
 	"portal-blog/internal/core/service"
+	"portal-blog/lib/conv"
 	"portal-blog/lib/validator"
 
 	"github.com/gofiber/fiber/v2"
@@ -138,8 +139,53 @@ func (ch *categoryHandler) GetCategories(c *fiber.Ctx) error {
 }
 
 // GetCategoryById implements CategoryHandler.
-func (*categoryHandler) GetCategoryById(c *fiber.Ctx) error {
-	panic("unimplemented")
+func (ch *categoryHandler) GetCategoryById(c *fiber.Ctx) error {
+	claims := c.Locals("user").(*entity.JwtData)
+  userID := claims.UserID
+  if userID == 0 {
+    code = "[HANDLER] GetCategoryById - 1"
+    err = errors.New("user not authorized")
+    log.Errorw(code, err)
+    errorResp.Meta.Status = false
+    errorResp.Meta.Message = "Unauthorized access"
+
+    return c.Status(fiber.StatusUnauthorized).JSON(errorResp)
+  }
+
+  idParam := c.Params("categoryID")
+  id, err := conv.StringToInt64(idParam)
+  if err != nil {
+    code = "[HANDLER] GetCategoryById - 2"
+    log.Errorw(code, err)
+    errorResp.Meta.Status = false
+    errorResp.Meta.Message = err.Error()
+
+    return c.Status(fiber.StatusBadRequest).JSON(errorResp)
+  }
+
+  result, err := ch.categoryService.GetCategoryById(c.Context(), id)
+  if err != nil {
+    code = "[HANDLER] GetCategoryById - 3"
+    log.Errorw(code, err)
+    errorResp.Meta.Status = false
+    errorResp.Meta.Message = err.Error()
+
+    return c.Status(fiber.StatusInternalServerError).JSON(errorResp)
+  }
+
+  categoryResponse := response.SuccessCategoryResponse {
+    ID:         id,
+    Title:      result.Title,
+    Slug:       result.Slug,
+    CreatedByName: result.User.Name,
+  }
+
+  defaultSuccessResponse.Meta.Status = true
+  defaultSuccessResponse.Meta.Message = "Category fetched successfully"
+  defaultSuccessResponse.Pagination = nil
+  defaultSuccessResponse.Data = categoryResponse
+  
+  return c.JSON(defaultSuccessResponse)
 }
 
 func NewCategoryHandler(categoryService service.CategoryService) CategoryHandler {
