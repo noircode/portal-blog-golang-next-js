@@ -61,7 +61,37 @@ func (c *categoryRepository) DeleteCategoryById(ctx context.Context, id int64) e
 
 // EditCategoryById implements CategoryRepository.
 func (c *categoryRepository) EditCategoryById(ctx context.Context, req entity.CategoryEntity) error {
-	panic("unimplemented")
+	var countSlug int64
+	err = c.db.Table("categories").Where("slug = ?", req.Slug).Count(&countSlug).Error
+	if err != nil {
+		code = "[REPOSITORY] EditCategoryById - 1"
+		log.Errorw(code, err)
+		return err
+	}
+
+	countSlug += 1
+	slug := req.Slug
+	
+	if countSlug == 0 {
+		slug = fmt.Sprintf("%s-%d", req.Slug, countSlug)
+	}
+	
+	
+
+	modelCategory := model.Category{
+		Title:       req.Title,
+		Slug:        slug,
+		CreatedByID: req.User.ID,
+	}
+
+	err = c.db.Where("id = ?", req.ID).Updates(&modelCategory).Error
+	if err != nil {
+		code = "[REPOSITORY] EditCategoryById - 2"
+		log.Errorw(code, err)
+		return err
+	}
+
+	return nil
 }
 
 // GetCategories retrieves a list of categories from the database.
@@ -114,19 +144,19 @@ func (c *categoryRepository) GetCategoryById(ctx context.Context, id int64) (*en
 	err = c.db.Where("id = ?", id).Preload("User").First(&categoryModel).Error
 	if err != nil {
 		code = "[REPOSITORY] GetCategoryById - 1"
-    log.Errorw(code, err)
-    return nil, err
+		log.Errorw(code, err)
+		return nil, err
 	}
 
 	categoryEntity := &entity.CategoryEntity{
 		ID:    categoryModel.ID,
-    Title: categoryModel.Title,
-    Slug:  categoryModel.Slug,
-    User: entity.UserEntity{
-      ID:       categoryModel.User.ID,
-      Name:     categoryModel.User.Name,
-      Email:    categoryModel.User.Email,
-    },
+		Title: categoryModel.Title,
+		Slug:  categoryModel.Slug,
+		User: entity.UserEntity{
+			ID:    categoryModel.User.ID,
+			Name:  categoryModel.User.Name,
+			Email: categoryModel.User.Email,
+		},
 	}
 
 	return categoryEntity, nil

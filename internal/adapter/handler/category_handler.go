@@ -90,8 +90,68 @@ func (*categoryHandler) DeleteCategoryById(c *fiber.Ctx) error {
 }
 
 // EditCategoryById implements CategoryHandler.
-func (*categoryHandler) EditCategoryById(c *fiber.Ctx) error {
-	panic("unimplemented")
+func (ch *categoryHandler) EditCategoryById(c *fiber.Ctx) error {
+  var req request.CategoryRequest
+  // Check JWT Authorization
+  claims := c.Locals("user").(*entity.JwtData)
+  userId := claims.UserID
+  if userId == 0 {
+    code = "[HANDLER] EditCategoryById - 1"
+    err = errors.New("user not authorized")
+    log.Errorw(code, err)
+    errorResp.Meta.Status = false
+    errorResp.Meta.Message = "Unauthorized access"
+
+    return c.Status(fiber.StatusUnauthorized).JSON(errorResp)
+  }
+
+  // Body Parser Category Entity
+  if err = c.BodyParser(&req); err != nil {
+    code = "[HANDLER] EditCategoryById - 2"
+    log.Errorw(code, err)
+    errorResp.Meta.Status = false
+    errorResp.Meta.Message = err.Error()
+
+    return c.Status(fiber.StatusBadRequest).JSON(errorResp)
+  }
+
+  // Get ID Param
+  idParam := c.Params("categoryID")
+  id, err := conv.StringToInt64(idParam)
+  if err != nil {
+    code = "[HANDLER] EditCategoryById - 3"
+    log.Errorw(code, err)
+    errorResp.Meta.Status = false
+    errorResp.Meta.Message = err.Error()
+
+    return c.Status(fiber.StatusBadRequest).JSON(errorResp)
+  }
+
+  reqEntity := entity.CategoryEntity{
+    ID: id,
+    Title: req.Title,
+    User: entity.UserEntity{
+      ID: int64(userId),
+    },
+  }
+
+  err = ch.categoryService.EditCategoryById(c.Context(), reqEntity)
+  if err != nil {
+    code = "[HANDLER] EditCategoryById - 4"
+    log.Errorw(code, err)
+    errorResp.Meta.Status = false
+    errorResp.Meta.Message = err.Error()
+
+    return c.Status(fiber.StatusInternalServerError).JSON(errorResp)
+  }
+
+  defaultSuccessResponse.Data = nil
+  defaultSuccessResponse.Pagination = nil
+  defaultSuccessResponse.Meta.Status = true
+  defaultSuccessResponse.Meta.Message = "Category updated successfully"
+
+  return c.JSON(defaultSuccessResponse)
+
 }
 
 // GetCategories implements CategoryHandler.
