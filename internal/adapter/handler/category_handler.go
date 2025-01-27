@@ -85,8 +85,50 @@ func (ch *categoryHandler) CreateCategory(c *fiber.Ctx) error {
 }
 
 // DeleteCategoryById implements CategoryHandler.
-func (*categoryHandler) DeleteCategoryById(c *fiber.Ctx) error {
-	panic("unimplemented")
+func (ch *categoryHandler) DeleteCategoryById(c *fiber.Ctx) error {
+	 // Check JWT Authorization
+   claims := c.Locals("user").(*entity.JwtData)
+   userId := claims.UserID
+   if userId == 0 {
+     code = "[HANDLER] DeleteCategoryById - 1"
+     err = errors.New("user not authorized")
+     log.Errorw(code, err)
+     errorResp.Meta.Status = false
+     errorResp.Meta.Message = "Unauthorized access"
+ 
+     return c.Status(fiber.StatusUnauthorized).JSON(errorResp)
+   }
+
+   // Get ID Param
+  idParam := c.Params("categoryID")
+  id, err := conv.StringToInt64(idParam)
+  if err != nil {
+    code = "[HANDLER] DeleteCategoryById - 2"
+    log.Errorw(code, err)
+    errorResp.Meta.Status = false
+    errorResp.Meta.Message = err.Error()
+
+    return c.Status(fiber.StatusBadRequest).JSON(errorResp)
+  }
+
+  err = ch.categoryService.DeleteCategoryById(c.Context(), id)
+
+  if err != nil {
+    code = "[HANDLER] DeleteCategoryById - 3"
+    log.Errorw(code, err)
+    errorResp.Meta.Status = false
+    errorResp.Meta.Message = err.Error()
+
+    return c.Status(fiber.StatusInternalServerError).JSON(errorResp)
+  }
+
+  defaultSuccessResponse.Meta.Status = true
+  defaultSuccessResponse.Meta.Message = "Category deleted successfully"
+  defaultSuccessResponse.Data = nil
+  defaultSuccessResponse.Pagination = nil
+
+  return c.JSON(defaultSuccessResponse)
+
 }
 
 // EditCategoryById implements CategoryHandler.
