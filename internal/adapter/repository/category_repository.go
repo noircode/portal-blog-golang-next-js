@@ -60,23 +60,23 @@ func (c *categoryRepository) DeleteCategoryById(ctx context.Context, id int64) e
 	err = c.db.Table("contents").Where("category_id = ?", id).Count(&count).Error
 	if err != nil {
 		code = "[REPOSITORY] DeleteCategoryById - 1"
-    log.Errorw(code, err)
-    return err
-  }
+		log.Errorw(code, err)
+		return err
+	}
 
 	if count > 0 {
-		return errors.New("Cannot delete a category that has associate contents")
+		return errors.New("cannot delete a category that has associate contents")
 	}
-	
+
 	err = c.db.Where("id = ?", id).Delete(&model.Category{}).Error
 	if err != nil {
 		code = "[REPOSITORY] DeleteCategoryById - 2"
-    log.Errorw(code, err)
-    return err
+		log.Errorw(code, err)
+		return err
 	}
 
 	return nil
-	
+
 }
 
 // EditCategoryById implements CategoryRepository.
@@ -91,12 +91,10 @@ func (c *categoryRepository) EditCategoryById(ctx context.Context, req entity.Ca
 
 	countSlug += 1
 	slug := req.Slug
-	
+
 	if countSlug == 0 {
 		slug = fmt.Sprintf("%s-%d", req.Slug, countSlug)
 	}
-	
-	
 
 	modelCategory := model.Category{
 		Title:       req.Title,

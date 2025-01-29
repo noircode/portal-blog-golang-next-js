@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"portal-blog/config"
+	"portal-blog/internal/adapter/cloudflare"
 	"portal-blog/internal/adapter/handler"
 	"portal-blog/internal/adapter/repository"
 	"portal-blog/internal/core/service"
@@ -35,9 +36,16 @@ func RunServer() {
 		return
 	}
 
+	err = os.MkdirAll("./temp/content", os.ModeAppend)
+	if err!= nil {
+    log.Fatal().Msgf("Error creating temp directory: %v", err)
+    return
+  }
+
 	// Cloudflare R2
 	cdfR2 := cfg.LoadAwsConfig()
-	_ = s3.NewFromConfig(cdfR2)
+	s3Client := s3.NewFromConfig(cdfR2)
+	r2Adapter := cloudflare.NewCloudflareR2Adapter(s3Client, cfg)
 
 	jwt := auth.NewJwt(cfg)
 	middlewareAuth := middleware.NewMiddleware(cfg)
@@ -47,16 +55,20 @@ func RunServer() {
 	// Repository
 	authRepo := repository.NewAuthRepository(db.DB)
 	categoryRepo := repository.NewCategoryRepository(db.DB)
+	contentRepo := repository.NewContentRepository(db.DB)
 
 
 	// Service
 	authService := service.NewAuthService(authRepo, cfg, jwt)
 	categoryService := service.NewCategoryService(categoryRepo)
+	contentService := service.NewContentService(contentRepo, cfg, r2Adapter)
 
 	// Handler
 	authHandler := handler.NewAuthHandler(authService)
 	categoryHandler := handler.NewCategoryHandler(categoryService)
+	contentHandler := handler.NewContentHandler(contentService)
 
+	// Fiber App
 	app := fiber.New()
 	app.Use(cors.New())
 	app.Use(recover.New())
@@ -80,6 +92,10 @@ func RunServer() {
 	categoryApp.Get("/:categoryID", categoryHandler.GetCategoryById)
 	categoryApp.Put("/:categoryID", categoryHandler.EditCategoryById)
 	categoryApp.Delete("/:categoryID", categoryHandler.DeleteCategoryById)
+
+	// Group Content
+	contentApp := adminApp.Group("/content")
+	contentApp.Get("/", contentHandler.GetContents)
 
 	go func() {
 		if cfg.App.AppPort == "" {
