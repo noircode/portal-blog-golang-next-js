@@ -36,11 +36,11 @@ func RunServer() {
 		return
 	}
 
-	err = os.MkdirAll("./temp/content", os.ModeAppend)
-	if err!= nil {
-    log.Fatal().Msgf("Error creating temp directory: %v", err)
-    return
-  }
+	err = os.MkdirAll("./temp/content/", 0775)
+	if err != nil {
+		log.Fatal().Msgf("Error creating temp directory: %v", err)
+		return
+	}
 
 	// Cloudflare R2
 	cdfR2 := cfg.LoadAwsConfig()
@@ -56,7 +56,6 @@ func RunServer() {
 	authRepo := repository.NewAuthRepository(db.DB)
 	categoryRepo := repository.NewCategoryRepository(db.DB)
 	contentRepo := repository.NewContentRepository(db.DB)
-
 
 	// Service
 	authService := service.NewAuthService(authRepo, cfg, jwt)
@@ -76,7 +75,6 @@ func RunServer() {
 		Format: "[${time}] %{ip} %{status} - %{latency} %{method} %{path}\n",
 	}))
 
-
 	// Group API
 	api := app.Group("/api")
 	api.Post("/login", authHandler.Login)
@@ -87,7 +85,7 @@ func RunServer() {
 
 	// Group Category
 	categoryApp := adminApp.Group("/category")
-	categoryApp.Get("/", categoryHandler.GetCategories)	
+	categoryApp.Get("/", categoryHandler.GetCategories)
 	categoryApp.Post("/", categoryHandler.CreateCategory)
 	categoryApp.Get("/:categoryID", categoryHandler.GetCategoryById)
 	categoryApp.Put("/:categoryID", categoryHandler.EditCategoryById)
@@ -96,6 +94,7 @@ func RunServer() {
 	// Group Content
 	contentApp := adminApp.Group("/content")
 	contentApp.Get("/", contentHandler.GetContents)
+	contentApp.Get("/:contentID", contentHandler.GetContentByID)
 
 	go func() {
 		if cfg.App.AppPort == "" {
@@ -105,7 +104,7 @@ func RunServer() {
 		err := app.Listen(":" + cfg.App.AppPort)
 		if err != nil {
 			log.Fatal().Msgf("Error starting server: %v", err)
-    }
+		}
 	}()
 
 	quit := make(chan os.Signal, 3)
@@ -115,7 +114,7 @@ func RunServer() {
 	<-quit
 
 	log.Print("server shutdown of 5 seconds\n")
-	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	app.ShutdownWithContext(ctx)
