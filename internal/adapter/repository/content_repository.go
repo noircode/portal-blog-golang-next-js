@@ -29,7 +29,14 @@ func (c *contentRepository) CreateContent(ctx context.Context, req entity.Conten
 
 // DeleteContent implements ContentRepository.
 func (c *contentRepository) DeleteContent(ctx context.Context, id int64) error {
-	panic("unimplemented")
+	err = c.db.Where("id = ?", id).Delete(&model.Content{}).Error
+	if err != nil {
+		code := "[REPOSITORY] DeleteContent - 1"
+		log.Errorw(code, err)
+		return err
+	}
+
+	return nil
 }
 
 // GetContentByID implements ContentRepository.

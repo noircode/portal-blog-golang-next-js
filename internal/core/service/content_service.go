@@ -32,7 +32,14 @@ func (c *contentService) CreateContent(ctx context.Context, req entity.ContentEn
 
 // DeleteContent implements ContentService.
 func (c *contentService) DeleteContent(ctx context.Context, id int64) error {
-	panic("unimplemented")
+	err = c.contentRepository.DeleteContent(ctx, id)
+	if err != nil {
+		code := "[SERVICE] DeleteContent - 1"
+    log.Errorw(code, err)
+    return err
+	}
+
+	return nil
 }
 
 // GetContentByID implements ContentService.
