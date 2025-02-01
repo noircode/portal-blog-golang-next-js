@@ -24,7 +24,26 @@ type contentRepository struct {
 
 // CreateContent implements ContentRepository.
 func (c *contentRepository) CreateContent(ctx context.Context, req entity.ContentEntity) error {
-	panic("unimplemented")
+	tags := strings.Join(req.Tags, ",")
+	modelContent := model.Content{
+		Title:       req.Title,
+    Excerpt:     req.Excerpt,
+    Description: req.Description,
+    Image:       req.Image,
+    Tags:        tags,
+    Status:      req.Status,
+    CategoryID:  req.CategoryID,
+    CreatedByID: req.CreatedByID,
+	}
+
+	err = c.db.Create(&modelContent).Error
+	if err != nil {
+		code := "[REPOSITORY] CreateContent - 1"
+    log.Errorw(code, err)
+    return err
+	}
+
+	return nil
 }
 
 // DeleteContent implements ContentRepository.

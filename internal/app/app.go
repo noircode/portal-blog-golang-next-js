@@ -95,6 +95,7 @@ func RunServer() {
 	contentApp := adminApp.Group("/content")
 	contentApp.Get("/", contentHandler.GetContents)
 	contentApp.Get("/:contentID", contentHandler.GetContentByID)
+	contentApp.Post("/", contentHandler.CreateContent)
 
 	go func() {
 		if cfg.App.AppPort == "" {

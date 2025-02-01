@@ -27,7 +27,14 @@ type contentService struct {
 
 // CreateContent implements ContentService.
 func (c *contentService) CreateContent(ctx context.Context, req entity.ContentEntity) error {
-	panic("unimplemented")
+	err = c.contentRepository.CreateContent(ctx, req)
+	if err != nil {
+		code := "[SERVICE] CreateContent - 1"
+    log.Errorw(code, err)
+    return err
+	}
+
+	return nil
 }
 
 // DeleteContent implements ContentService.
