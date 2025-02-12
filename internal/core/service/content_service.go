@@ -30,8 +30,8 @@ func (c *contentService) CreateContent(ctx context.Context, req entity.ContentEn
 	err = c.contentRepository.CreateContent(ctx, req)
 	if err != nil {
 		code := "[SERVICE] CreateContent - 1"
-    log.Errorw(code, err)
-    return err
+		log.Errorw(code, err)
+		return err
 	}
 
 	return nil
@@ -42,8 +42,8 @@ func (c *contentService) DeleteContent(ctx context.Context, id int64) error {
 	err = c.contentRepository.DeleteContent(ctx, id)
 	if err != nil {
 		code := "[SERVICE] DeleteContent - 1"
-    log.Errorw(code, err)
-    return err
+		log.Errorw(code, err)
+		return err
 	}
 
 	return nil
@@ -55,8 +55,8 @@ func (c *contentService) GetContentByID(ctx context.Context, id int64) (*entity.
 
 	if err != nil {
 		code = "[SERVICE] GetContentByID - 1"
-    log.Errorw(code, err)
-    return nil, err
+		log.Errorw(code, err)
+		return nil, err
 	}
 
 	return result, nil
@@ -76,12 +76,26 @@ func (c *contentService) GetContents(ctx context.Context) ([]entity.ContentEntit
 
 // UpdateContent implements ContentService.
 func (c *contentService) UpdateContent(ctx context.Context, req entity.ContentEntity) error {
-	panic("unimplemented")
+	err = c.contentRepository.UpdateContent(ctx, req)
+	if err != nil {
+		code := "[SERVICE] UpdateContent - 1"
+		log.Errorw(code, err)
+		return err
+	}
+
+	return nil
 }
 
 // UploadImageR2 implements ContentService.
 func (c *contentService) UploadImageR2(ctx context.Context, req entity.FileUploadEntity) (string, error) {
-	panic("unimplemented")
+	urlImage, err := c.r2.UploadImage(&req)
+	if err != nil {
+		code := "[SERVICE] UploadImageR2 - 1"
+		log.Errorw(code, err)
+		return "", err
+	}
+
+	return urlImage, nil
 }
 
 func NewContentService(repo repository.ContentRepository, cfg *config.Config, r2 cloudflare.CloudflareR2Adapter) ContentService {
