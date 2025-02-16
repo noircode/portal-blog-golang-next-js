@@ -351,7 +351,7 @@ func (ch *contentHandler) UploadImageR2(c *fiber.Ctx) error {
 	req.Image = fmt.Sprintf("./temp/content/%s", file.Filename)
 	reqEntity := entity.FileUploadEntity{
 		Path: req.Image,
-		Name: fmt.Sprintf("%d-%d", claims.UserID, time.Now().UnixNano()),
+		Name: fmt.Sprintf("%d-%d", int64(claims.UserID), time.Now().UnixNano()),
 	}
 
 	imageUrl, err := ch.contentService.UploadImageR2(c.Context(), reqEntity)
