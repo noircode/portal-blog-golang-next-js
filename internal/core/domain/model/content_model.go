@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type Content struct {
 	ID          int64      `gorm:"id"`
