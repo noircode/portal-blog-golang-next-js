@@ -105,8 +105,8 @@ func RunServer() {
 
 	// User
 	userApp := adminApp.Group("/user")
-	userApp.Get("/", userHandler.GetUserByID)
-	userApp.Put("/update-passsword", userHandler.UpdatePassword)
+	userApp.Get("/profile", userHandler.GetUserByID)
+	userApp.Put("/update-password", userHandler.UpdatePassword)
 
 	go func() {
 		if cfg.App.AppPort == "" {
