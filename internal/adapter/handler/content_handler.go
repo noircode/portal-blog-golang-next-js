@@ -134,7 +134,7 @@ func (ch *contentHandler) GetContentWithQuery(c *fiber.Ctx) error {
 		Status:    "PUBLISH",
 	}
 
-	results, err := ch.contentService.GetContents(c.Context(), queryEntity)
+	results, totalData, totalPages, err := ch.contentService.GetContents(c.Context(), queryEntity)
 
 	if err != nil {
 		code := "[HANDLER] GetContentWithQuery - 3"
@@ -146,7 +146,7 @@ func (ch *contentHandler) GetContentWithQuery(c *fiber.Ctx) error {
 	}
 
 	defaultSuccessResponse.Meta.Status = true
-	defaultSuccessResponse.Meta.Message = "Successfully"
+	defaultSuccessResponse.Meta.Message = "Success"
 
 	respContents := []response.ContentResponse{}
 
@@ -170,6 +170,13 @@ func (ch *contentHandler) GetContentWithQuery(c *fiber.Ctx) error {
 	}
 
 	defaultSuccessResponse.Data = respContents
+	defaultSuccessResponse.Pagination = &response.PaginationResponse{
+		TotalRecords: int(totalData),
+		Page:         page,
+		PerPage:      limit,
+		TotalPages:   int(totalPages),
+	}
+
 	return c.JSON(defaultSuccessResponse)
 }
 
@@ -356,7 +363,7 @@ func (ch *contentHandler) GetContents(c *fiber.Ctx) error {
 		CategoryID: 0,
 	}
 
-	results, err := ch.contentService.GetContents(c.Context(), queryEntity)
+	results, _, _, err := ch.contentService.GetContents(c.Context(), queryEntity)
 
 	if err != nil {
 		code := "[HANDLER] GetContents - 2"
