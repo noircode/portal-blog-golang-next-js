@@ -368,19 +368,76 @@ func (ch *contentHandler) GetContents(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(errorResp)
 	}
 
+	// Page
+	page := 1
+	if c.Query("page") != "" {
+		page, err = conv.StringToInt(c.Query("page"))
+		if err != nil {
+			log.Errorw("[HANDLER] GetContents - 2", "Error parsing page query", err)
+			errorResp.Meta.Status = false
+			errorResp.Meta.Message = "Invalid page number"
+
+			return c.Status(fiber.StatusBadRequest).JSON(errorResp)
+		}
+	}
+
+	// Limit
+	limit := 10
+	if c.Query("limit") != "" {
+		limit, err = conv.StringToInt(c.Query("limit"))
+		if err != nil {
+			log.Errorw("[HANDLER] GetContents - 3", "Error parsing limit query", err)
+			errorResp.Meta.Status = false
+			errorResp.Meta.Message = "Invalid limit number"
+
+			return c.Status(fiber.StatusBadRequest).JSON(errorResp)
+		}
+	}
+
+	// OrderBy
+	orderBy := "created_at"
+	if c.Query("orderBy") != "" {
+		orderBy = c.Query("orderBy")
+	}
+
+	// OrderType
+	orderType := "desc"
+	if c.Query("orderType") != "" {
+		orderType = c.Query("orderType")
+	}
+
+	// Search
+	search := ""
+	if c.Query("search") != "" {
+		search = c.Query("search")
+	}
+
+	// CategoryID
+	var categoryID int64 = 0
+	if c.Query("categoryID") != "" {
+		categoryID, err = conv.StringToInt64(c.Query("categoryID"))
+		if err != nil {
+			log.Errorw("[HANDLER] GetContents - 4", "Error parsing categoryID query", err)
+			errorResp.Meta.Status = false
+			errorResp.Meta.Message = "Invalid categoryID"
+
+			return c.Status(fiber.StatusBadRequest).JSON(errorResp)
+		}
+	}
+
 	queryEntity := entity.QueryString{
-		Limit:      0,
-		Page:       0,
-		OrderBy:    "",
-		OrderType:  "",
-		Search:     "",
-		CategoryID: 0,
+		Limit:      limit,
+		Page:       page,
+		OrderBy:    orderBy,
+		OrderType:  orderType,
+		Search:     search,
+		CategoryID: categoryID,
 	}
 
 	results, _, _, err := ch.contentService.GetContents(c.Context(), queryEntity)
 
 	if err != nil {
-		code := "[HANDLER] GetContents - 2"
+		code := "[HANDLER] GetContents - 5"
 		log.Errorw(code, err)
 		errorResp.Meta.Status = false
 		errorResp.Meta.Message = err.Error()
